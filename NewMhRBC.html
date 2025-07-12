@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miners Haven Rebirth Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #2d3748; /* Slightly lighter dark background for the container */
+            padding: 2.5rem;
+            border-radius: 1rem; /* More rounded corners */
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2); /* Deeper shadow */
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #a0aec0; /* Slightly desaturated text for labels */
+        }
+        .input-group input[type="number"],
+        .input-group input[type="text"],
+        .input-group select { /* Added select to styling */
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #4a5568; /* Darker border */
+            background-color: #242b36; /* Even darker input background */
+            color: #cbd5e0; /* Light text for input */
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input[type="number"]:focus,
+        .input-group input[type="text"]:focus,
+        .input-group select:focus { /* Added select to focus styling */
+            border-color: #63b3ed; /* Blue on focus */
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            background-color: #4299e1; /* Blue button */
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn:hover {
+            background-color: #3182ce; /* Darker blue on hover */
+            transform: translateY(-1px);
+        }
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .result-box {
+            background-color: #1a202c; /* Darkest background for results */
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px dashed #4a5568; /* Dashed border for distinction */
+            margin-top: 1.5rem;
+            word-wrap: break-word; /* Ensure long numbers wrap */
+        }
+        .result-box p {
+            margin-bottom: 0.5rem;
+            font-size: 1.125rem;
+            color: #edf2f7; /* Very light text for results */
+        }
+        .result-box p:last-child {
+            margin-bottom: 0;
+        }
+        .message-box {
+            background-color: #fbd38d; /* Warning yellow */
+            color: #975a16; /* Dark yellow text */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-weight: 500;
+            display: none; /* Hidden by default */
+        }
+        .message-box.show {
+            display: block;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-center text-white mb-6">Miners Haven Utility</h1>
+
+        <section class="p-6 bg-gray-700 rounded-lg shadow-inner">
+            <h2 class="text-2xl font-bold text-blue-300 mb-4">Rebirth Cost Calculator</h2>
+            <div class="input-group mb-4">
+                <label for="currentLife">Enter Current Life:</label>
+                <input type="number" id="currentLife" placeholder="e.g., 50" min="1" value="1">
+            </div>
+            <button id="calculateRebirthCostBtn" class="btn w-full">Calculate Rebirth Cost</button>
+            <div id="rebirthResult" class="result-box mt-4">
+                <p><strong>Cost for Next Rebirth:</strong> <span id="nextRebirthCost">N/A</span></p>
+            </div>
+            <div id="rebirthMessage" class="message-box"></div>
+        </section>
+
+        <section class="p-6 bg-gray-700 rounded-lg shadow-inner">
+            <h2 class="text-2xl font-bold text-blue-300 mb-4">Max Life from Cash</h2>
+            <div class="input-group mb-4">
+                <label for="inputCashForLifeValue">Enter Cash Amount:</label>
+                <div class="flex gap-2">
+                    <input type="number" id="inputCashForLifeValue" placeholder="e.g., 1.5, 100" min="0" step="any" class="flex-grow">
+                    <select id="inputCashForLifeSuffix" class="p-2 border rounded-md bg-gray-800 border-gray-600 text-white"></select>
+                </div>
+            </div>
+            <button id="calculateMaxLifeBtn" class="btn w-full">Calculate Max Life</button>
+            <div id="maxLifeResult" class="result-box mt-4">
+                <p><strong>Max Life Achievable:</strong> <span id="maxLifeAchievable">N/A</span></p>
+            </div>
+            <div id="maxLifeMessage" class="message-box"></div>
+        </section>
+
+        <section class="p-6 bg-gray-700 rounded-lg shadow-inner">
+            <h2 class="text-2xl font-bold text-blue-300 mb-4">Cash Suffix Converter</h2>
+            <div class="input-group mb-4">
+                <label for="cashAmount">Enter Cash Amount (e.g., 1234567, 1.5B, 100Qn):</label>
+                <input type="text" id="cashAmount" placeholder="e.g., 1234567 or 1.5M">
+            </div>
+            <button id="convertCashBtn" class="btn w-full">Convert Cash</button>
+            <div id="cashResult" class="result-box mt-4">
+                <p><strong>Full Number:</strong> <span id="fullNumber">N/A</span></p>
+                <p><strong>Suffixed:</strong> <span id="suffixedNumber">N/A</span></p>
+            </div>
+            <div id="cashMessage" class="message-box"></div>
+        </section>
+    </div>
+
+    <script>
+        // Define the suffix list from Miners Haven, ordered from smallest to largest exponent.
+        // The values are powers of 10 for each corresponding symbol.
+        const suffixes = [
+            { value: 1e3, symbol: "k" },
+            { value: 1e6, symbol: "M" },
+            { value: 1e9, symbol: "B" },
+            { value: 1e12, symbol: "T" },
+            { value: 1e15, symbol: "qd" },
+            { value: 1e18, symbol: "Qn" },
+            { value: 1e21, symbol: "sx" },
+            { value: 1e24, symbol: "Sp" },
+            { value: 1e27, symbol: "O" },
+            { value: 1e30, symbol: "N" },
+            { value: 1e33, symbol: "de" },
+            { value: 1e36, symbol: "Ud" },
+            { value: 1e39, symbol: "DD" },
+            { value: 1e42, symbol: "tdD" },
+            { value: 1e45, symbol: "qdD" },
+            { value: 1e48, symbol: "QnD" },
+            { value: 1e51, symbol: "sxD" },
+            { value: 1e54, symbol: "SpD" },
+            { value: 1e57, symbol: "OcD" },
+            { value: 1e60, symbol: "NvD" },
+            { value: 1e63, symbol: "Vgn" },
+            { value: 1e66, symbol: "UVg" },
+            { value: 1e69, symbol: "DVg" },
+            { value: 1e72, symbol: "TVg" },
+            { value: 1e75, symbol: "qtV" },
+            { value: 1e78, symbol: "QnV" },
+            { value: 1e81, symbol: "SeV" },
+            { value: 1e84, symbol: "SPG" },
+            { value: 1e87, symbol: "OVG" },
+            { value: 1e90, symbol: "NVG" },
+            { value: 1e93, symbol: "TGN" },
+            { value: 1e96, symbol: "UTG" },
+            { value: 1e99, symbol: "DTG" },
+            { value: 1e102, symbol: "tsTG" },
+            { value: 1e105, symbol: "qtTG" },
+            { value: 1e108, symbol: "QnTG" },
+            { value: 1e111, symbol: "ssTG" },
+            { value: 1e114, symbol: "SpTG" },
+            { value: 1e117, symbol: "OcTG" },
+            { value: 1e120, symbol: "NoTG" },
+            { value: 1e123, symbol: "QdDR" },
+            { value: 1e126, symbol: "uQDR" },
+            { value: 1e129, symbol: "dQDR" },
+            { value: 1e132, symbol: "tQDR" },
+            { value: 1e135, symbol: "qdQDR" },
+            { value: 1e138, symbol: "QnQDR" },
+            { value: 1e141, symbol: "sxQDR" },
+            { value: 1e144, symbol: "SpQDR" },
+            { value: 1e147, symbol: "OQDDr" },
+            { value: 1e150, "symbol": "NQDDr" },
+            { value: 1e153, "symbol": "qQGNT" },
+            { value: 1e156, "symbol": "uQGNT" },
+            { value: 1e159, "symbol": "dQGNT" },
+            { value: 1e162, "symbol": "tQGNT" },
+            { value: 1e165, "symbol": "qdQGNT" },
+            { value: 1e168, "symbol": "QnQGNT" },
+            { value: 1e171, "symbol": "sxQGNT" },
+            { value: 1e174, "symbol": "SpQGNT" },
+            { value: 1e177, "symbol": "OQQGNT" },
+            { value: 1e180, "symbol": "NQQGNT" },
+            { value: 1e183, "symbol": "SXGNTL" },
+            { value: 1e186, "symbol": "USXGNTL" },
+            { value: 1e189, "symbol": "DSXGNTL" },
+            { value: 1e192, "symbol": "TSXGNTL" },
+            { value: 1e195, "symbol": "QTSXGNTL" },
+            { value: 1e198, "symbol": "QNSXGNTL" },
+            { value: 1e201, "symbol": "SXSXGNTL" },
+            { value: 1e204, "symbol": "SPSXGNTL" },
+            { value: 1e207, "symbol": "OSXGNTL" },
+            { value: 1e210, "symbol": "NVSXGNTL" },
+            { value: 1e213, "symbol": "SPTGNTL" },
+            { value: 1e216, "symbol": "USPTGNTL" },
+            { value: 1e219, "symbol": "DSPTGNTL" },
+            { value: 1e222, "symbol": "TSPTGNTL" },
+            { value: 1e225, "symbol": "QTSPTGNTL" },
+            { value: 1e228, "symbol": "QNSPTGNTL" },
+            { value: 1e231, "symbol": "SXSPTGNTL" },
+            { value: 1e234, "symbol": "SPSPTGNTL" },
+            { value: 1e237, "symbol": "OSPTGNTL" },
+            { value: 1e240, "symbol": "NVSPTGNTL" }, // This is 10^240
+            { value: 1e243, "symbol": "OTGNTL" },
+            { value: 1e246, "symbol": "UOTGNTL" },
+            { value: 1e249, "symbol": "DOTGNTL" },
+            { value: 1e252, "symbol": "TOTGNTL" },
+            { value: 1e255, "symbol": "QTOTGNTL" },
+            { value: 1e258, "symbol": "QNOTGNTL" },
+            { value: 1e261, "symbol": "SXOTGNTL" },
+            { value: 1e264, "symbol": "SPOTGNTL" },
+            { value: 1e267, "symbol": "OTOTGNTL" },
+            { value: 1e270, "symbol": "NVOTGNTL" },
+            { value: 1e273, "symbol": "NONGNTL" },
+            { value: 1e276, "symbol": "UNONGNTL" },
+            { value: 1e279, "symbol": "DNONGNTL" },
+            { value: 1e282, "symbol": "TNONGNTL" },
+            { value: 1e285, "symbol": "QTNONGNTL" },
+            { value: 1e288, "symbol": "QNNONGNTL" },
+            { value: 1e291, "symbol": "SXNONGNTL" },
+            { value: 1e294, "symbol": "SPNONGNTL" },
+            { value: 1e297, "symbol": "OTNONGNTL" },
+            { value: 1e300, "symbol": "NONONGNTL" },
+            { value: 1e303, "symbol": "CENT" },
+            { value: 1e306, "symbol": "UNCENT" },
+        ];
+
+        // Define the rebirth price cap based on user's input: 10NVSPTGNTL (1e241) at life 80,351
+        const REBIRTH_PRICE_CAP = 1e241; // 10 * 10^240 = 10^241
+        const REBIRTH_CAP_LIFE = 80351;
+
+        /**
+         * Formats a large number into a suffixed string (e.g., 1,234,567 becomes 1.23M).
+         * @param {number} num - The number to format.
+         * @returns {string} The formatted string with suffix.
+         */
+        function formatCash(num) {
+            if (typeof num !== 'number' || isNaN(num)) {
+                return 'Invalid Number';
+            }
+            if (num === 0) return "0";
+            // Check for negative numbers and handle their sign
+            const isNegative = num < 0;
+            num = Math.abs(num);
+
+            if (num < 1000) return (isNegative ? '-' : '') + num.toLocaleString(); // Use local string for small numbers
+
+            // Iterate through suffixes from largest to smallest for display
+            // We use the reverse order of the array to find the largest fitting suffix
+            for (let i = suffixes.length - 1; i >= 0; i--) {
+                if (num >= suffixes[i].value) {
+                    const formatted = (num / suffixes[i].value).toFixed(3); // 3 decimal places for precision
+                    return (isNegative ? '-' : '') + `${formatted}${suffixes[i].symbol}`;
+                }
+            }
+            // Fallback to scientific notation for extremely large numbers not in suffixes
+            // or if the number is smaller than the smallest suffix (k) but still needs formatting
+            return (isNegative ? '-' : '') + num.toExponential(3);
+        }
+
+        /**
+         * Parses a numerical value and an optional suffix into a full numerical value.
+         * This new function is designed for the split input (number + dropdown).
+         * @param {number} value - The numerical part of the cash amount.
+         * @param {string} suffixSymbol - The suffix symbol (e.g., "M", "Qn", or empty string for no suffix).
+         * @returns {number} The full numerical value.
+         */
+        function parseCashFromComponents(value, suffixSymbol) {
+            if (isNaN(value)) return NaN; // Ensure the numerical part is valid
+
+            let finalValue = value;
+
+            if (suffixSymbol) { // If a suffix is selected
+                // Find the suffix value (case-insensitive)
+                const suffixEntry = suffixes.find(s => s.symbol.toLowerCase() === suffixSymbol.toLowerCase());
+
+                if (suffixEntry) {
+                    finalValue = value * suffixEntry.value;
+                } else {
+                    // If suffix is not recognized, return NaN
+                    return NaN;
+                }
+            }
+            return finalValue;
+        }
+
+        /**
+         * Parses a suffixed cash string or a plain number string into a full numerical value.
+         * This function is kept for the Cash Suffix Converter section.
+         * @param {string} str - The string to parse (e.g., "1.5M", "100qd", "5000").
+         * @returns {number} The full numerical value.
+         */
+        function parseCash(str) {
+            str = String(str).trim(); // Ensure it's a string and trim whitespace
+            if (!str) return NaN;
+
+            // Handle negative sign (though cash in MH is usually positive)
+            const isNegative = str.startsWith('-');
+            if (isNegative) {
+                str = str.substring(1); // Remove the negative sign for parsing
+            }
+
+            // Regex to capture the number part (integer or decimal) and the potential suffix
+            // Allows optional comma separators in the number part
+            const match = str.match(/^([\d,]+(?:\.\d+)?)\s*([a-zA-Z]*)$/);
+            if (!match) return NaN; // No valid number/suffix pattern found
+
+            let numberPart = match[1].replace(/,/g, ''); // Remove commas from number part
+            let value = parseFloat(numberPart);
+
+            if (isNaN(value)) return NaN; // Failed to parse number part
+
+            let suffixSymbol = match[2];
+
+            // Use the new parseCashFromComponents logic
+            const parsedValue = parseCashFromComponents(value, suffixSymbol);
+            return isNegative ? -parsedValue : parsedValue;
+        }
+
+        /**
+         * Calculates the rebirth cost for a given life number based on Miners Haven formulas.
+         * Applies the cap if the life reaches 80,351 or the calculated cost exceeds 10NVSPTGNTL.
+         * @param {number} currentLife - The player's current life (rebirth count).
+         * @returns {number} The calculated cash cost for the next rebirth.
+         */
+        function calculateRebirthCost(currentLife) {
+            // If the currentLife is already at or beyond the cap, return the cap price immediately.
+            if (currentLife >= REBIRTH_CAP_LIFE) {
+                return REBIRTH_PRICE_CAP;
+            }
+
+            // 'x' is defined as the player's current life - 1
+            const x = currentLife - 1;
+            let cost;
+
+            if (currentLife >= 1 && currentLife <= 40) {
+                // Formula for lives 1-40: (2.5 * 10^19) * (x + 1)
+                cost = 2.5 * Math.pow(10, 19) * (x + 1);
+            } else if (currentLife >= 41 && currentLife <= 5000) {
+                // Formula for lives 41-5000:
+                // (10^19 * (5 * floor(x/5) + 2.5) * (100 * floor(x/25) + 1) * (1000 * floor(x/500) + 1)) ^ (0.00024x + 1)
+                const term1 = Math.pow(10, 19);
+                const term2 = (5 * Math.floor(x / 5)) + 2.5;
+                const term3 = (100 * Math.floor(x / 25)) + 1;
+                const term4 = (1000 * Math.floor(x / 500)) + 1;
+                const exponent = (0.00024 * x) + 1;
+
+                const base = term1 * term2 * term3 * term4;
+                if (base <= 0) {
+                    console.error("Base for exponentiation is non-positive for currentLife:", currentLife, "x:", x, "Base:", base);
+                    return NaN;
+                }
+                cost = Math.pow(base, exponent);
+
+            } else if (currentLife >= 5001) {
+                // Formula for lives 5001 onwards:
+                // (10^19 * (5 * floor(x/5) + 2.5) * (100 * floor(x/25) + 1) * (1000 * floor(x/500) + 1)) ^ (0.00024 * floor(10 * 7th_root(12500x^4)) + 1)
+
+                const term1 = Math.pow(10, 19);
+                const term2 = (5 * Math.floor(x / 5)) + 2.5;
+                const term3 = (100 * Math.floor(x / 25)) + 1;
+                const term4 = (1000 * Math.floor(x / 500)) + 1;
+
+                const innerRootBase = 12500 * Math.pow(x, 4);
+                let seventhRoot;
+                // For a real result, innerRootBase should be positive when taking an even root.
+                // For 1/7 (odd root), negative base is fine, result is negative.
+                if (innerRootBase < 0) {
+                    seventhRoot = -Math.pow(Math.abs(innerRootBase), 1/7);
+                } else {
+                    seventhRoot = Math.pow(innerRootBase, 1/7);
+                }
+                
+                const exponentInnerFloor = Math.floor(10 * seventhRoot);
+                const exponent = (0.00024 * exponentInnerFloor) + 1;
+
+                const base = term1 * term2 * term3 * term4;
+                if (base <= 0) {
+                    console.error("Base for exponentiation is non-positive for currentLife:", currentLife, "x:", x, "Base:", base);
+                    return NaN;
+                }
+                cost = Math.pow(base, exponent);
+
+            } else {
+                return NaN; // Invalid life number
+            }
+
+            // Apply the rebirth price cap if the calculated cost exceeds it.
+            // The life cap is handled at the very beginning of the function now.
+            if (cost >= REBIRTH_PRICE_CAP) {
+                return REBIRTH_PRICE_CAP;
+            }
+
+            return cost;
+        }
+
+        /**
+         * Calculates the maximum life achievable with a given cash amount using a binary search.
+         * @param {number} cashAmount - The total cash amount the player has.
+         * @returns {number} The maximum life number achievable.
+         */
+        function calculateMaxLife(cashAmount) {
+            // If cash is less than the cost of life 1, max life is 0.
+            const costLife1 = calculateRebirthCost(1);
+            if (isNaN(costLife1) || cashAmount < costLife1) {
+                return 0;
+            }
+
+            // If cash is enough to reach the cap, return the cap life.
+            if (cashAmount >= REBIRTH_PRICE_CAP) {
+                return REBIRTH_CAP_LIFE;
+            }
+
+            let lowLife = 1;
+            // The max life can go up to the cap life + a buffer to ensure we cover all possibilities
+            // and the search doesn't stop prematurely if the true max life is just below the cap.
+            let highLife = REBIRTH_CAP_LIFE + 500; // Add a buffer, adjust as needed
+            let maxLifeFound = 0;
+
+            // Binary search to find the highest life whose cost is less than or equal to cashAmount
+            // We search for the *highest* life whose cost is <= cashAmount.
+            while (lowLife <= highLife) {
+                const midLife = Math.floor((lowLife + highLife) / 2);
+                
+                // If midLife exceeds the cap, treat its cost as the cap price
+                let costAtMidLife;
+                if (midLife >= REBIRTH_CAP_LIFE) {
+                    costAtMidLife = REBIRTH_PRICE_CAP;
+                } else {
+                    costAtMidLife = calculateRebirthCost(midLife);
+                }
+
+                if (isNaN(costAtMidLife)) {
+                    console.warn(`Calculation for life ${midLife} resulted in NaN. Stopping binary search.`);
+                    // If a calculation error occurs, it means we've likely gone too high or hit a limit.
+                    // Try to narrow the search down.
+                    highLife = midLife - 1; 
+                    continue; // Skip to next iteration
+                }
+
+                if (costAtMidLife <= cashAmount) {
+                    maxLifeFound = midLife; // This life is achievable, try for higher
+                    lowLife = midLife + 1;
+                } else {
+                    highLife = midLife - 1; // This life is too expensive, try lower
+                }
+            }
+            return maxLifeFound;
+        }
+
+
+        // --- Event Listeners and UI Updates ---
+
+        const currentLifeInput = document.getElementById('currentLife');
+        const calculateRebirthCostBtn = document.getElementById('calculateRebirthCostBtn');
+        const nextRebirthCostSpan = document.getElementById('nextRebirthCost');
+        const rebirthMessageDiv = document.getElementById('rebirthMessage');
+
+        // Get references to the new input elements for Max Life from Cash
+        const inputCashForLifeValueInput = document.getElementById('inputCashForLifeValue');
+        const inputCashForLifeSuffixSelect = document.getElementById('inputCashForLifeSuffix');
+        const calculateMaxLifeBtn = document.getElementById('calculateMaxLifeBtn');
+        const maxLifeAchievableSpan = document.getElementById('maxLifeAchievable');
+        const maxLifeMessageDiv = document.getElementById('maxLifeMessage');
+
+        const cashAmountInput = document.getElementById('cashAmount');
+        const convertCashBtn = document.getElementById('convertCashBtn');
+        const fullNumberSpan = document.getElementById('fullNumber');
+        const suffixedNumberSpan = document.getElementById('suffixedNumber');
+        const cashMessageDiv = document.getElementById('cashMessage');
+
+        /**
+         * Displays a message in a designated message box.
+         * @param {HTMLElement} messageBox - The div element to display the message in.
+         * @param {string} message - The message text.
+         * @param {boolean} isError - True if it's an error message (influences styling), false otherwise.
+         */
+        function showMessage(messageBox, message, isError = false) {
+            messageBox.textContent = message;
+            messageBox.className = 'message-box show'; // Reset and show
+            if (isError) {
+                messageBox.classList.add('bg-red-300', 'text-red-900'); // Error styling
+                messageBox.classList.remove('bg-yellow-300', 'text-yellow-900');
+            } else {
+                messageBox.classList.add('bg-yellow-300', 'text-yellow-900'); // Default styling
+                messageBox.classList.remove('bg-red-300', 'text-red-900');
+            }
+        }
+
+        /**
+         * Clears a message from a designated message box.
+         * @param {HTMLElement} messageBox - The div element to clear.
+         */
+        function clearMessage(messageBox) {
+            messageBox.textContent = '';
+            messageBox.classList.remove('show', 'bg-red-300', 'text-red-900', 'bg-yellow-300', 'text-yellow-900');
+        }
+
+        // Event listener for the Rebirth Cost Calculator button
+        calculateRebirthCostBtn.addEventListener('click', () => {
+            clearMessage(rebirthMessageDiv); // Clear previous messages
+            const currentLife = parseInt(currentLifeInput.value, 10);
+
+            if (isNaN(currentLife) || currentLife < 1) {
+                showMessage(rebirthMessageDiv, 'Please enter a valid life number (must be 1 or higher).', true);
+                nextRebirthCostSpan.textContent = 'N/A';
+                return;
+            }
+
+            const cost = calculateRebirthCost(currentLife);
+
+            if (isNaN(cost)) {
+                showMessage(rebirthMessageDiv, 'Calculation error. Please check the life number or formulas.', true);
+                nextRebirthCostSpan.textContent = 'Error';
+            } else if (cost === Infinity) {
+                nextRebirthCostSpan.textContent = '∞ (Infinity)';
+                showMessage(rebirthMessageDiv, 'The cost has reached theoretical infinity within JavaScript\'s number limits.', false);
+            }
+            else {
+                nextRebirthCostSpan.textContent = formatCash(cost);
+            }
+        });
+
+        // Event listener for the Max Life from Cash button
+        calculateMaxLifeBtn.addEventListener('click', () => {
+            clearMessage(maxLifeMessageDiv);
+            const inputValue = parseFloat(inputCashForLifeValueInput.value);
+            const selectedSuffix = inputCashForLifeSuffixSelect.value; // Will be "" for "None"
+
+            // Validate the numeric input first
+            if (isNaN(inputValue) || inputValue < 0) {
+                showMessage(maxLifeMessageDiv, 'Please enter a valid positive number for the cash amount.', true);
+                maxLifeAchievableSpan.textContent = 'N/A';
+                return;
+            }
+            
+            const parsedCash = parseCashFromComponents(inputValue, selectedSuffix);
+
+            if (isNaN(parsedCash) || parsedCash < 0) { // Re-check after combining with suffix
+                showMessage(maxLifeMessageDiv, 'Error combining number and suffix. Please review your input.', true);
+                maxLifeAchievableSpan.textContent = 'N/A';
+                return;
+            }
+
+            const maxLife = calculateMaxLife(parsedCash);
+            maxLifeAchievableSpan.textContent = maxLife;
+
+            if (maxLife === 0 && parsedCash > 0) {
+                showMessage(maxLifeMessageDiv, 'The provided cash is not enough for even Life 1. Life 1 cost is: ' + formatCash(calculateRebirthCost(1)) + '.', false);
+            } else if (maxLife === REBIRTH_CAP_LIFE) {
+                showMessage(maxLifeMessageDiv, 'Cash amount is sufficient to reach the maximum life cap (' + REBIRTH_CAP_LIFE + ').', false);
+            } else {
+                clearMessage(maxLifeMessageDiv); // Clear message if everything is fine
+            }
+        });
+
+
+        // Event listener for the Cash Suffix Converter button
+        convertCashBtn.addEventListener('click', () => {
+            clearMessage(cashMessageDiv); // Clear previous messages
+            const cashAmountStr = cashAmountInput.value;
+
+            const parsedValue = parseCash(cashAmountStr);
+
+            if (isNaN(parsedValue)) {
+                showMessage(cashMessageDiv, 'Invalid cash format. Please enter a number (e.g., 1234567) or a number with a recognized suffix (e.g., 1.5M, 100Qn).', true);
+                fullNumberSpan.textContent = 'N/A';
+                suffixedNumberSpan.textContent = 'N/A';
+                return;
+            }
+
+            // Display the full number, using toLocaleString for readability
+            fullNumberSpan.textContent = parsedValue.toLocaleString('en-US', { maximumFractionDigits: 3 });
+
+            // Display the suffixed number
+            suffixedNumberSpan.textContent = formatCash(parsedValue);
+        });
+
+        // Initial setup for the rebirth calculator and suffix dropdown
+        document.addEventListener('DOMContentLoaded', () => {
+            // Populate the suffix dropdown for "Max Life from Cash"
+            let noneOption = document.createElement('option');
+            noneOption.value = ''; // Empty value for no suffix
+            noneOption.textContent = 'None';
+            inputCashForLifeSuffixSelect.appendChild(noneOption);
+
+            // Add 'k' as a default option if you want it to appear even for small numbers, otherwise iterate all
+            // You can add a placeholder value like 1 for the first element
+            suffixes.forEach(s => {
+                let option = document.createElement('option');
+                option.value = s.symbol;
+                option.textContent = s.symbol;
+                inputCashForLifeSuffixSelect.appendChild(option);
+            });
+
+            // Trigger calculation for default value on load for Rebirth Cost
+            calculateRebirthCostBtn.click();
+        });
+    </script>
+</body>
+</html>
