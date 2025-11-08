@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reborn Item Combination Calculator - Canvas Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #1e88e5;
+            margin-bottom: 25px;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        select, button {
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        select {
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .chart-area {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        #text-results {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .item-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .item-list li {
+            background-color: #e3f2fd;
+            margin: 5px 0;
+            padding: 10px;
+            border-left: 5px solid #1e88e5;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Elemental Match Calculator (Canvas Demo) ✨</h1>
+
+    <div class="controls">
+        <label for="superstitiousItemSelect">Select Target Superstitious Item:</label>
+        <select id="superstitiousItemSelect">
+            </select>
+        <button onclick="calculateAndRender()">Find Best 3-Item Match</button>
+    </div>
+
+    <div class="chart-area">
+        <canvas id="elementalRadarChart"></canvas>
+    </div>
+
+    <div id="text-results">
+        <p>Select an item and click 'Find Best 3-Item Match' to see the best combination and its visual match on the radar chart.</p>
+    </div>
+</div>
+
+<script>
+    // --- ITEM DATA EMBEDDED FROM FILES ---
+    // The JSON strings are split to prevent potential parsing issues in some environments.
+    const rebornItems = JSON.parse(`{"Precursor Furnace":{"Earth":0,"Aether":10,"Order":5,"Fire":-5,"Entropy":3,"Water":0},"Vulcan's Grasp":{"Earth":0,"Aether":3,"Order":5,"Fire":10,"Entropy":0,"Water":-5},"Pilotite Mine":{"Earth":3,"Aether":5,"Order":2,"Fire":-2,"Entropy":0,"Water":0},"Combustion Engine":{"Earth":0,"Aether":2,"Order":0,"Fire":5,"Entropy":3,"Water":-2},"Timeless Enhancement":{"Earth":3,"Aether":2,"Order":5,"Fire":0,"Entropy":-2,"Water":0},"The Fracture":{"Earth":3,"Aether":2,"Order":-2,"Fire":0,"Entropy":5,"Water":0},"Solar Flare":{"Earth":0,"Aether":3,"Order":2,"Fire":5,"Entropy":0,"Water":-2},"Sage Redeemer":{"Earth":2,"Aether":0,"Order":3,"Fire":-2,"Entropy":0,"Water":5},"Gravitational Gearwork":{"Earth":-2,"Aether":5,"Order":3,"Fire":2,"Entropy":0,"Water":0},"Dreamer's Fright":{"Earth":3,"Aether":0,"Order":-2,"Fire":2,"Entropy":5,"Water":0},"Crystal Shrine":{"Earth":10,"Aether":-5,"Order":5,"Fire":3,"Entropy":0,"Water":0},"Aether Refinery":{"Earth":2,"Aether":5,"Order":3,"Fire":0,"Entropy":-2,"Water":0},"Dreamer's Anguish":{"Earth":3,"Aether":0,"Order":-2,"Fire":2,"Entropy":5,"Water":0},"The Sporest":{"Earth":5,"Aether":0,"Order":0,"Fire":-2,"Entropy":3,"Water":1},"Morning Star":{"Earth":0,"Aether":3,"Order":0,"Fire":5,"Entropy":2,"Water":-2},"Atlantic Monolith":{"Earth":3,"Aether":0,"Order":2,"Fire":-2,"Entropy":0,"Water":5},"Righteous Will":{"Earth":2,"Aether":3,"Order":5,"Fire":0,"Entropy":-2,"Water":0},"The Abomination":{"Earth":3,"Aether":0,"Order":-2,"Fire":0,"Entropy":5,"Water":2},"Scorpium Mine":{"Earth":3,"Aether":0,"Order":0,"Fire":5,"Entropy":2,"Water":-2},"Green Tea Latte":{"Earth":3,"Aether":0,"Order":0,"Fire":-2,"Entropy":2,"Water":5},"Nova Star":{"Earth":0,"Aether":5,"Order":0,"Fire":10,"Entropy":3,"Water":-5},"Newtonic Corroder":{"Earth":3,"Aether":0,"Order":0,"Fire":-2,"Entropy":5,"Water":2},"Big Bad Blaster":{"Earth":0,"Aether":2,"Order":0,"Fire":5,"Entropy":3,"Water":-2},"Dreamer's Might":{"Earth":3,"Aether":0,"Order":5,"Fire":0,"Entropy":-2,"Water":2},"Vortex Chamber":{"Earth":-2,"Aether":5,"Order":2,"Fire":0,"Entropy":3,"Water":0},"Cooling Chamber":{"Earth":-2,"Aether":5,"Order":0,"Fire":3,"Entropy":0,"Water":2},"Son of Poison":{"Earth":5,"Aether":-5,"Order":0,"Fire":0,"Entropy":10,"Water":3},"Blind Justice":{"Earth":3,"Aether":0,"Order":5,"Fire":-2,"Entropy":2,"Water":0},"Skyliner Flux":{"Earth":-2,"Aether":5,"Order":3,"Fire":0,"Entropy":0,"Water":0},"Nuclear Stronghold":{"Earth":0,"Aether":-2,"Order":0,"Fire":2,"Entropy":5,"Water":3},"Black Dwarf":{"Earth":3,"Aether":5,"Order":0,"Fire":-5,"Entropy":10,"Water":0},"Flaming Schrodinger":{"Earth":2,"Aether":0,"Order":0,"Fire":5,"Entropy":3,"Water":-2},"Guardian of the Gate":{"Earth":3,"Aether":0,"Order":5,"Fire":-2,"Entropy":2,"Water":0},"Hades' Palace":{"Earth":0,"Aether":0,"Order":3,"Fire":10,"Entropy":5,"Water":-5},"Pizza Blaster":{"Earth":0,"Aether":3,"Order":2,"Fire":5,"Entropy":0,"Water":-2},"Precursor Mine":{"Earth":0,"Aether":10,"Order":5,"Fire":-5,"Entropy":3,"Water":0},"Big Bertha":{"Earth":-2,"Aether":3,"Order":2,"Fire":0,"Entropy":5,"Water":0},"Esoteric Citadel":{"Earth":1,"Aether":-1,"Order":3,"Fire":1,"Entropy":3,"Water":-2},"Railgun Cannon":{"Earth":0,"Aether":3,"Order":0,"Fire":5,"Entropy":1,"Water":-2},"Fractured Reality":{"Earth":0,"Aether":1,"Order":5,"Fire":-2,"Entropy":3,"Water":0},"Gravitational Gyrocopter":{"Earth":3,"Aether":0,"Order":-5,"Fire":0,"Entropy":10,"Water":5},"Quaint Skymill":{"Earth":0,"Aether":3,"Order":5,"Fire":0,"Entropy":-2,"Water":2},"Northern Lights":{"Earth":0,"Aether":5,"Order":3,"Fire":-5,"Entropy":0,"Water":10},"Toxic Waste Disposal":{"Earth":2,"Aether":0,"Order":-2,"Fire":0,"Entropy":5,"Water":3},"Apollium Mine":{"Earth":0,"Aether":5,"Order":0,"Fire":10,"Entropy":3,"Water":-5},"Red Giant":{"Earth":0,"Aether":3,"Order":0,"Fire":5,"Entropy":2,"Water":-2},"Invasive Cyberlord":{"Earth":0,"Aether":2,"Order":0,"Fire":3,"Entropy":5,"Water":-2},"Eternal Journey":{"Earth":3,"Aether":2,"Order":-2,"Fire":0,"Entropy":5,"Water":0},"Dreamer's Blight":{"Earth":3,"Aether":0,"Order":-5,"Fire":0,"Entropy":10,"Water":5},"Atomium Mine":{"Earth":3,"Aether":-2,"Order":5,"Fire":0,"Entropy":2,"Water":0},"Wild Spore":{"Earth":3,"Aether":2,"Order":0,"Fire":-2,"Entropy":5,"Water":0},"Father of Freon":{"Earth":0,"Aether":5,"Order":0,"Fire":-5,"Entropy":3,"Water":10},"Sword God Shrine":{"Earth":0,"Aether":5,"Order":-5,"Fire":3,"Entropy":10,"Water":0},"Frozen Justice":{"Earth":0,"Aether":2,"Order":3,"Fire":-2,"Entropy":0,"Water":5},"Phase Refiner":{"Earth":2,"Aether":5,"Order":3,"Fire":0,"Entropy":0,"Water":-2},"Newtonium Mine":{"Earth":3,"Aether":2,"Order":0,"Fire":-2,"Entropy":5,"Water":0},"Vampire Spore":{"Earth":3,"Aether":0,"Order":0,"Fire":5,"Entropy":10,"Water":-5},"Ore Illuminator":{"Earth":-2,"Aether":2,"Order":5,"Fire":0,"Entropy":3,"Water":0},"Blue Supergiant":{"Earth":0,"Aether":5,"Order":0,"Fire":10,"Entropy":3,"Water":-5},"Frigid Dystopia":{"Earth":0,"Aether":3,"Order":0,"Fire":-5,"Entropy":5,"Water":10},"Industrial Scarab":{"Earth":2,"Aether":0,"Order":0,"Fire":-2,"Entropy":5,"Water":3},"Tesla Resetter":{"Earth":0,"Aether":5,"Order":3,"Fire":0,"Entropy":2,"Water":-2},"Desert Monument":{"Earth":3,"Aether":0,"Order":0,"Fire":5,"Entropy":1,"Water":-2},"Big Alberto":{"Earth":3,"Aether":5,"Order":0,"Fire":0,"Entropy":10,"Water":-5},"Phase Processor":{"Earth":2,"Aether":5,"Order":3,"Fire":0,"Entropy":0,"Water":-2},"Venomshank":{"Earth":3,"Aether":0,"Order":-2,"Fire":0,"Entropy":5,"Water":2},"Dragon Blaster":{"Earth":0,"Aether":3,"Order":0,"Fire":10,"Entropy":5,"Water":-5},"Ancient Temple":{"Earth":5,"Aether":2,"Order":3,"Fire":-2,"Entropy":0,"Water":0},"The Catalyst":{"Earth":-2,"Aether":2,"Order":3,"Fire":5,"Entropy":0,"Water":0},"Scorching Heat":{"Earth":2,"Aether":0,"Order":0,"Fire":5,"Entropy":3,"Water":-2},"Ore Skillet":{"Earth":0,"Aether":3,"Order":2,"Fire":5,"Entropy":0,"Water":-2},"Lightningbolt Refiner":{"Earth":0,"Aether":5,"Order":0,"Fire":-2,"Entropy":2,"Water":3},"Breech Loader":{"Earth":3,"Aether":5,"Order":2,"Fire":0,"Entropy":-2,"Water":0},"Igneous Forge":{"Earth":5,"Aether":0,"Order":0,"Fire":10,"Entropy":3,"Water":-5},"Massive Diamond Mine":{"Earth":5,"Aether":0,"Order":2,"Fire":3,"Entropy":-2,"Water":0},"Yunium Mine":{"Earth":3,"Aether":2,"Order":-2,"Fire":0,"Entropy":0,"Water":5},"Stardust Pulsar":{"Earth":0,"Aether":10,"Order":0,"Fire":5,"Entropy":3,"Water":-5},"Quantum Ore Cleaner":{"Earth":-2,"Aether":5,"Order":3,"Fire":0,"Entropy":0,"Water":2},"Crystallized System":{"Earth":5,"Aether":0,"Order":3,"Fire":2,"Entropy":0,"Water":-2},"Spirit of Fire":{"Earth":0,"Aether":3,"Order":0,"Fire":10,"Entropy":5,"Water":-5},"Symmetrium Mine":{"Earth":3,"Aether":0,"Order":2,"Fire":-2,"Entropy":0,"Water":5},"Arcane Lightning":{"Earth":0,"Aether":10,"Order":0,"Fire":-5,"Entropy":3,"Water":5},"Mineral Wheel":{"Earth":5,"Aether":0,"Order":2,"Fire":0,"Entropy":-2,"Water":3},"Shard Park":{"Earth":5,"Aether":2,"Order":3,"Fire":0,"Entropy":0,"Water":-2},"Astral Predictor":{"Earth":-2,"Aether":5,"Order":2,"Fire":0,"Entropy":0,"Water":3},"Palladium Drill":{"Earth":10,"Aether":0,"Order":0,"Fire":3,"Entropy":5,"Water":-5},"Ambrosia Fountain":{"Earth":3,"Aether":5,"Order":0,"Fire":-2,"Entropy":0,"Water":2},"Dragonglass Mine":{"Earth":3,"Aether":0,"Order":-2,"Fire":2,"Entropy":5,"Water":0},"Sakura Garden":{"Earth":5,"Aether":2,"Order":0,"Fire":-2,"Entropy":0,"Water":3},"Ore Sawmill":{"Earth":0,"Aether":2,"Order":3,"Fire":-2,"Entropy":5,"Water":0},"Plasma Scanner":{"Earth":-2,"Aether":2,"Order":0,"Fire":5,"Entropy":3,"Water":0},"Gate of Eclipse":{"Earth":0,"Aether":2,"Order":3,"Fire":-2,"Entropy":5,"Water":0},"Virtual Enhancer":{"Earth":5,"Aether":3,"Order":10,"Fire":0,"Entropy":-5,"Water":0},"Dark Magic":{"Earth":0,"Aether":3,"Order":2,"Fire":-2,"Entropy":5,"Water":0},"Industrial Firecrystal Mine":{"Earth":3,"Aether":0,"Order":0,"Fire":5,"Entropy":2,"Water":-2},"Clockwork":{"Earth":-2,"Aether":3,"Order":5,"Fire":0,"Entropy":2,"Water":0},"Azure Refiner":{"Earth":5,"Aether":0,"Order":2,"Fire":-2,"Entropy":0,"Water":3},"Nature's Grip":{"Earth":5,"Aether":3,"Order":2,"Fire":0,"Entropy":-2,"Water":0}}`);
+
+    const superstitiousItems = JSON.parse(`{"Elysium Solemnity":{"Earth":15,"Aether":65,"Order":130,"Fire":35,"Entropy":35,"Water":20},"Meralin's Sorcery":{"Earth":75,"Aether":75,"Order":75,"Fire":75,"Entropy":75,"Water":75},"Daestrophe":{"Earth":40,"Aether":0,"Order":0,"Fire":95,"Entropy":145,"Water":45},"Swag City":{"Earth":75,"Aether":50,"Order":25,"Fire":75,"Entropy":100,"Water":25},"The Heart of Void":{"Earth":170,"Aether":90,"Order":25,"Fire":50,"Entropy":250,"Water":50},"Ore Hypernova":{"Earth":10,"Aether":200,"Order":25,"Fire":50,"Entropy":100,"Water":0},"Methuselah's Mask":{"Earth":100,"Aether":50,"Order":50,"Fire":50,"Entropy":150,"Water":50},"The Death Cap":{"Earth":50,"Aether":35,"Order":5,"Fire":15,"Entropy":125,"Water":20},"Pandora's Box":{"Earth":35,"Aether":35,"Order":12,"Fire":80,"Entropy":130,"Water":12},"Havium Mine":{"Earth":130,"Aether":40,"Order":50,"Fire":25,"Entropy":0,"Water":0},"Enchanted Library":{"Earth":20,"Aether":75,"Order":175,"Fire":0,"Entropy":20,"Water":10},"Draedon's Gauntlet":{"Earth":10,"Aether":130,"Order":50,"Fire":0,"Entropy":20,"Water":20},"Delta Phantom":{"Earth":35,"Aether":65,"Order":0,"Fire":0,"Entropy":130,"Water":55},"Midas Blaster":{"Earth":100,"Aether":0,"Order":25,"Fire":50,"Entropy":25,"Water":0},"Optic Origin":{"Earth":0,"Aether":50,"Order":100,"Fire":25,"Entropy":25,"Water":0},"Garden of Gaia":{"Earth":150,"Aether":45,"Order":45,"Fire":5,"Entropy":10,"Water":80},"Tyrant's Throne":{"Earth":50,"Aether":10,"Order":130,"Fire":25,"Entropy":20,"Water":0},"Vulcan's Wrath":{"Earth":40,"Aether":35,"Order":5,"Fire":125,"Entropy":55,"Water":0},"The Hourglass":{"Earth":50,"Aether":200,"Order":200,"Fire":50,"Entropy":100,"Water":50}}`);
+
+    const elementalStats = ["Earth", "Aether", "Order", "Fire", "Entropy", "Water"];
+    const rebornItemNames = Object.keys(rebornItems);
+    let radarChart = null; // To hold the Chart.js instance
+
+    /**
+     * Initializes the dropdown menu with Superstitious Items.
+     */
+    function init() {
+        const select = document.getElementById('superstitiousItemSelect');
+        for (const name in superstitiousItems) {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            select.appendChild(option);
+        }
+    }
+
+    /**
+     * Finds the best 3-item combination using the Sum of Squared Differences (SSD) method.
+     * @returns {{combination: string[], combinedStats: Object, deviation: number}}
+     */
+    function calculateBestCombination(targetItemName) {
+        const targetStats = superstitiousItems[targetItemName];
+        let bestDeviation = Infinity;
+        let bestCombination = [];
+        let bestCombinedStats = {};
+        
+        const N = rebornItemNames.length;
+        
+        // Brute-force combination search for all unique sets of 3 items
+        for (let i = 0; i < N; i++) {
+            for (let j = i + 1; j < N; j++) {
+                for (let k = j + 1; k < N; k++) {
+                    const item1Stats = rebornItems[rebornItemNames[i]];
+                    const item2Stats = rebornItems[rebornItemNames[j]];
+                    const item3Stats = rebornItems[rebornItemNames[k]];
+
+                    let currentCombinedStats = {};
+                    let currentDeviation = 0;
+
+                    for (const stat of elementalStats) {
+                        const combinedStat = item1Stats[stat] + item2Stats[stat] + item3Stats[stat];
+                        currentCombinedStats[stat] = combinedStat;
+                        
+                        // SSD calculation
+                        const difference = targetStats[stat] - combinedStat;
+                        currentDeviation += difference * difference;
+                    }
+
+                    if (currentDeviation < bestDeviation) {
+                        bestDeviation = currentDeviation;
+                        bestCombination = [rebornItemNames[i], rebornItemNames[j], rebornItemNames[k]];
+                        bestCombinedStats = currentCombinedStats;
+                    }
+                }
+            }
+        }
+
+        return { combination: bestCombination, combinedStats: bestCombinedStats, deviation: bestDeviation };
+    }
+
+    /**
+     * Main function to run the calculation and update the canvas and text results.
+     */
+    function calculateAndRender() {
+        const targetItemName = document.getElementById('superstitiousItemSelect').value;
+        if (!targetItemName) return;
+
+        const targetStats = superstitiousItems[targetItemName];
+        const result = calculateBestCombination(targetItemName);
+
+        renderChart(targetItemName, targetStats, result.combinedStats);
+        displayResults(targetItemName, targetStats, result.combination, result.combinedStats, result.deviation);
+    }
+
+
+    /**
+     * Renders the Radar Chart using Chart.js.
+     */
+    function renderChart(targetName, targetStats, combinedStats) {
+        const ctx = document.getElementById('elementalRadarChart').getContext('2d');
+
+        // Prepare data for Chart.js
+        const targetData = elementalStats.map(stat => targetStats[stat]);
+        const combinedData = elementalStats.map(stat => combinedStats[stat]);
+
+        // Find the absolute maximum value across all target stats for consistent scaling
+        const maxTargetValue = Math.max(...targetData);
+        // Set a nice round number for the scale max (e.g., 300, 200, or a bit over the max)
+        const suggestedMax = Math.ceil(maxTargetValue / 50) * 50; 
+        const chartMax = suggestedMax > 0 ? suggestedMax : 50; 
+
+        if (radarChart) {
+            radarChart.destroy(); // Destroy existing chart instance
+        }
+
+        radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: elementalStats,
+                datasets: [
+                    {
+                        label: `Target: ${targetName}`,
+                        data: targetData,
+                        backgroundColor: 'rgba(30, 136, 229, 0.4)', // Blue shade
+                        borderColor: '#1e88e5',
+                        pointBackgroundColor: '#1e88e5',
+                        borderWidth: 2,
+                        fill: true,
+                    },
+                    {
+                        label: 'Best 3-Item Combination Total',
+                        data: combinedData,
+                        backgroundColor: 'rgba(76, 175, 80, 0.4)', // Green shade
+                        borderColor: '#4CAF50',
+                        pointBackgroundColor: '#4CAF50',
+                        borderWidth: 2,
+                        fill: true,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Elemental Match Visualization'
+                    }
+                },
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: chartMax, 
+                        pointLabels: {
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            stepSize: chartMax / 5,
+                            showLabelBackdrop: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Displays the best combination items and the final deviation score.
+     */
+    function displayResults(targetName, targetStats, bestCombination, bestCombinedStats, bestDeviation) {
+        const resultsDiv = document.getElementById('text-results');
+        
+        let combinationListHTML = bestCombination.map(item => {
+            const stats = elementalStats.map(s => `**${s}:** ${rebornItems[item][s]}`).join(', ');
+            return `<li>${item} (${stats})</li>`;
+        }).join('');
+
+        let combinedStatsHTML = elementalStats.map(stat => {
+            const diff = targetStats[stat] - bestCombinedStats[stat];
+            const diffText = diff > 0 ? `+${diff}` : diff;
+            const diffColor = diff === 0 ? 'color: #4CAF50;' : 'color: #e53935;';
+            return `
+                <tr>
+                    <td>${stat}</td>
+                    <td>${targetStats[stat]}</td>
+                    <td>${bestCombinedStats[stat]}</td>
+                    <td style="${diffColor} font-weight: bold;">${diffText}</td>
+                </tr>
+            `;
+        }).join('');
+
+        resultsDiv.innerHTML = `
+            <h2>Target: ${targetName}</h2>
+            <p><strong>Total Deviation (Sum of Squared Differences):</strong> <span style="font-size: 1.2em; color: #1e88e5; font-weight: bold;">${bestDeviation.toFixed(2)}</span></p>
+            <p>The calculation found the following combination to have the closest total elemental stats (lowest deviation):</p>
+            
+            <h3>Best Combination Items:</h3>
+            <ul class="item-list">
+                ${combinationListHTML}
+            </ul>
+
+            <h3>Stat Totals Comparison:</h3>
+            <table style="width:100%; border-collapse: collapse; text-align: left;">
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Element</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Target Value</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Combination Total</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Difference (Target - Total)</th>
+                </tr>
+                ${combinedStatsHTML}
+            </table>
+        `;
+    }
+    
+    // Initialize the application when the page loads
+    window.onload = init;
+</script>
+
+</body>
+</html>
